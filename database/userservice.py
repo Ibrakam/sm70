@@ -1,14 +1,17 @@
 from database import get_db
 from database.models import User
+from api.schemas import UserSchema
 
-def create_user_db(name, email, password, user_name, lastname = None, 
-                    birthday = None, city = None):
+
+def create_user_db(user_data: UserSchema):
     db = next(get_db())
-    new_user = User(name=name, email=email, password=password, user_name=user_name,
-                    lastname=lastname, birthday=birthday, city=city)
+    user_dict = user_data.model_dump()
+    new_user = User(**user_dict)
     db.add(new_user)
     db.commit()
     return True
+
+
 
 
 
@@ -51,7 +54,7 @@ def delete_user_db(uid):
     db = next(get_db())
     exact_user = db.query(User).filter_by(uid=uid).first()
     if exact_user:
-        db.delet(exact_user)
+        db.delete(exact_user)
         db.commit()
         return True
     return False
