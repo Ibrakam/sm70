@@ -18,7 +18,7 @@ def create_user_db(user_data: UserSchema):
 def get_user_db(uid = 0):
     db = next(get_db())
     if uid:
-        exact_user = db.query(User).filter_by(uid=uid).first()
+        exact_user = db.query(User).filter_by(id=uid).first()
         if exact_user:
             return exact_user
         return False
@@ -28,7 +28,7 @@ def get_user_db(uid = 0):
 
 def update_user_db(uid, change_info, new_info):
     db = next(get_db())
-    exact_user = db.query(User).filter_by(uid=uid).first()
+    exact_user = db.query(User).filter_by(id=uid).first()
     if exact_user:
         if change_info == 'name':
             exact_user.name = new_info
@@ -52,7 +52,7 @@ def update_user_db(uid, change_info, new_info):
 
 def delete_user_db(uid):
     db = next(get_db())
-    exact_user = db.query(User).filter_by(uid=uid).first()
+    exact_user = db.query(User).filter_by(id=uid).first()
     if exact_user:
         db.delete(exact_user)
         db.commit()

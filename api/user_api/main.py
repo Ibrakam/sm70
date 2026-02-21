@@ -12,7 +12,7 @@ async def create_user_api(user_data: UserSchema):
 
 
 @user_router.get('/get_user')
-async def get_user_api(uid: int):
+async def get_user_api(uid: int = 0):
     result = get_user_db(uid=uid)
     if result:
         return {'status': 1, 'message': result}
