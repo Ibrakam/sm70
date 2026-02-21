@@ -1,18 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>sm70 | Лента</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-    {% for i in all_posts %}
+    <a class="skip-link" href="#main-content">Перейти к контенту</a>
 
-    <a href="/user/{{ i.user_fk.id }}">{{i.user_fk.username}}</a>
-    <br>
-    {{ i.text }}
-    <br>
-    <br>
-    {% endfor %}
+    <header class="site-header" role="banner">
+        <a href="/" class="logo">sm70</a>
+        <button
+            id="theme-switcher"
+            class="theme-switcher"
+            type="button"
+            aria-label="Переключить тему"
+            aria-pressed="false"
+        >Тёмная тема</button>
+    </header>
+
+    <main class="page-shell" id="main-content">
+
+        <section class="hero" aria-labelledby="feed-title">
+            <p class="hero__eyebrow">// feed</p>
+            <h1 id="feed-title" class="hero__title">Посты, релизы,<br>вайбы продакшна</h1>
+            <p class="hero__lead">Короткие мемы и честный инженерный контекст без лишнего шума.</p>
+        </section>
+
+        <div class="meme-day" aria-label="Мем дня">
+            <span class="meme-day__icon" aria-hidden="true">💡</span>
+            <div class="meme-day__body">
+                <p class="meme-day__title">Мем дня</p>
+                <p class="meme-day__text">{{ meme_of_the_day }}</p>
+            </div>
+        </div>
+
+        <section class="feed" aria-label="Лента постов">
+            {% if feed_posts %}
+                {% for post in feed_posts %}
+                <article class="post-card reveal" style="--reveal-delay: {{ loop.index0 * 60 }}ms;">
+                    <header class="post-card__header">
+                        <div class="post-card__author-wrap">
+                            <span class="avatar" aria-hidden="true">{{ post.author_username[0].upper() if post.author_username else '?' }}</span>
+                            <a href="/user/{{ post.author_id }}" class="post-card__author">{{ post.author_username }}</a>
+                        </div>
+                        <span class="meme-chip" aria-hidden="true">{{ post.meme_chip }}</span>
+                    </header>
+
+                    <p class="post-card__text">{{ post.text }}</p>
+
+                    {% if post.photo_url %}
+                    <figure class="post-card__photo-wrap" style="margin:0;">
+                        <img class="post-card__photo" src="{{ post.photo_url }}" alt="Фото к посту">
+                    </figure>
+                    {% endif %}
+
+                    <footer class="post-card__meta">
+                        <span>{{ post.created_at }}</span>
+                        {% if post.comments_count > 0 %}
+                        <span>{{ post.comments_count }} комм.</span>
+                        {% endif %}
+                    </footer>
+
+                    {% if post.comments %}
+                    <section class="comments" aria-label="Комментарии">
+                        <h3 class="comments__title">Комментарии</h3>
+                        {% for comment in post.comments[:3] %}
+                        <div class="comment">
+                            <span class="comment__avatar" aria-hidden="true">{{ comment.author_name[0].upper() if comment.author_name else '?' }}</span>
+                            <div class="comment__body">
+                                <p class="comment__author">{{ comment.author_name }}</p>
+                                <p class="comment__text">{{ comment.text }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if post.comments_count > 3 %}
+                        <p class="comments__more">+ ещё {{ post.comments_count - 3 }}</p>
+                        {% endif %}
+                    </section>
+                    {% endif %}
+                </article>
+                {% endfor %}
+            {% else %}
+                <article class="empty-state">
+                    <p class="empty-state__emoji">📭</p>
+                    <h2 class="empty-state__title">Пока постов нет</h2>
+                    <p class="empty-state__text">Лента ждёт первый пост. Мем уже наготове.</p>
+                </article>
+            {% endif %}
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', path='/js/theme.js') }}"></script>
 </body>
 </html>

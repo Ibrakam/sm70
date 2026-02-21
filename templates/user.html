@@ -1,22 +1,124 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>sm70 | {{ user.username if user else "Профиль" }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-    
-username: {{ user.username }}
-<br>
-email: {{ user.email }}
+    <a class="skip-link" href="#main-content">Перейти к контенту</a>
 
-{% for i in user_posts %}
-Мои посты
-{{ i.text }}
-<br>
-{% endfor %}
+    <header class="site-header" role="banner">
+        <a href="/" class="logo">sm70</a>
+        <button
+            id="theme-switcher"
+            class="theme-switcher"
+            type="button"
+            aria-label="Переключить тему"
+            aria-pressed="false"
+        >Тёмная тема</button>
+    </header>
 
+    <main class="profile-shell" id="main-content">
+        <div class="profile-layout">
 
+            <!-- sidebar -->
+            <aside class="profile-sidebar reveal" style="--reveal-delay: 0ms;">
+                <div class="profile-card">
+                    <div class="profile-avatar" aria-hidden="true">
+                        {{ user.username[0].upper() if user and user.username else "?" }}
+                    </div>
+
+                    <p class="profile-card__eyebrow">// profile</p>
+                    <h1 class="profile-card__name" id="profile-name">
+                        {{ user.username if user else "Пользователь" }}
+                    </h1>
+                    <p class="profile-card__email">
+                        {{ user.email if user else "email не указан" }}
+                    </p>
+                    <p class="profile-card__meme">{{ profile_meme_status }}</p>
+
+                    <div class="profile-metrics" role="list" aria-label="Метрики пользователя">
+                        <div class="metric" role="listitem">
+                            <p class="metric__label">Посты</p>
+                            <p class="metric__value">{{ metrics.post_count }}</p>
+                        </div>
+                        <div class="metric" role="listitem">
+                            <p class="metric__label">Город</p>
+                            <p class="metric__value">{{ metrics.city }}</p>
+                        </div>
+                        <div class="metric" role="listitem">
+                            <p class="metric__label">С нами с</p>
+                            <p class="metric__value">{{ metrics.reg_date }}</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- posts feed -->
+            <section class="feed" aria-label="Посты пользователя">
+                <h2 class="section-title">Посты</h2>
+
+                {% if user_posts %}
+                    {% for post in user_posts %}
+                    <article class="post-card reveal" style="--reveal-delay: {{ (loop.index0 + 1) * 60 }}ms;">
+                        <header class="post-card__header">
+                            <div class="post-card__author-wrap">
+                                <span class="avatar" aria-hidden="true">{{ post.author_username[0].upper() if post.author_username else '?' }}</span>
+                                <a href="/user/{{ post.author_id }}" class="post-card__author">{{ post.author_username }}</a>
+                            </div>
+                            <span class="meme-chip" aria-hidden="true">{{ post.meme_chip }}</span>
+                        </header>
+
+                        <p class="post-card__text">{{ post.text }}</p>
+
+                        {% if post.photo_url %}
+                        <figure class="post-card__photo-wrap" style="margin:0;">
+                            <img class="post-card__photo" src="{{ post.photo_url }}" alt="Фото к посту">
+                        </figure>
+                        {% endif %}
+
+                        <footer class="post-card__meta">
+                            <span>{{ post.created_at }}</span>
+                            {% if post.comments_count > 0 %}
+                            <span>{{ post.comments_count }} комм.</span>
+                            {% endif %}
+                        </footer>
+
+                        {% if post.comments %}
+                        <section class="comments" aria-label="Комментарии">
+                            <h3 class="comments__title">Комментарии</h3>
+                            {% for comment in post.comments[:3] %}
+                            <div class="comment">
+                                <span class="comment__avatar" aria-hidden="true">{{ comment.author_name[0].upper() if comment.author_name else '?' }}</span>
+                                <div class="comment__body">
+                                    <p class="comment__author">{{ comment.author_name }}</p>
+                                    <p class="comment__text">{{ comment.text }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% if post.comments_count > 3 %}
+                            <p class="comments__more">+ ещё {{ post.comments_count - 3 }}</p>
+                            {% endif %}
+                        </section>
+                        {% endif %}
+                    </article>
+                    {% endfor %}
+                {% else %}
+                    <article class="empty-state">
+                        <p class="empty-state__emoji">✍️</p>
+                        <h3 class="empty-state__title">Постов пока нет</h3>
+                        <p class="empty-state__text">Когда очень хотел написать пост, но ушёл чинить прод.</p>
+                    </article>
+                {% endif %}
+            </section>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', path='/js/theme.js') }}"></script>
 </body>
 </html>
