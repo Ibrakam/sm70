@@ -1,7 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -9,9 +9,13 @@ from fastapi.templating import Jinja2Templates
 from api.comment_api.main import comment_router
 from api.photo_api.main import photo_router
 from api.post_api.main import get_all_or_exact_post, get_exact_user_post_db, post_router
-from api.user_api.main import get_user_db, user_router
+from api.user_api.main import get_user_db, user_router, get_user_by_username_db, verify_password
 from database import Base, SessionLocal, engine
 from database.models import Comment, PostPhoto, User
+
+from deps import create_access_token, get_current_user
+from fastapi.security import OAuth2PasswordRequestForm
+from api.schemas import TokenSchema, UserSchema
 
 app = FastAPI(docs_url="/docs")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -24,6 +28,34 @@ app.include_router(user_router)
 app.include_router(post_router)
 app.include_router(comment_router)
 Base.metadata.create_all(engine)
+
+
+
+@app.post("/token", response_model=TokenSchema)
+async def login(form: OAuth2PasswordRequestForm = Depends()):
+    user = get_user_by_username_db(form.username)
+
+    if not user.username and verify_password(form.password, user.password):
+        return "Неправильный пароль"
+    
+    access_token = await create_access_token(data={"sub": user.username})
+
+    return {"access_token": access_token,
+            "token_type": "bearer"}
+
+
+@app.get("/user/me")
+async def get_user(user: UserSchema = Depends(get_current_user)):
+    return user
+
+
+
+
+
+
+
+
+
 
 FEED_MEME_CHIPS = [
     "Когда деплой в пятницу, а ты уже в такси",
