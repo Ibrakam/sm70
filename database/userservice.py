@@ -58,3 +58,17 @@ def delete_user_db(uid):
         db.commit()
         return True
     return False
+
+
+def verify_password(password, password_db):
+    return password == password_db
+
+def get_user_by_username_db(username):
+    db = next(get_db())
+    user = db.query(User).filter_by(username = username).first()
+    if user:
+        return user
+    return False
+
+
+
