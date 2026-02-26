@@ -1,8 +1,8 @@
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import FastAPI, Request, Depends
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Request, Depends, Form
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -35,7 +35,7 @@ Base.metadata.create_all(engine)
 async def login(form: OAuth2PasswordRequestForm = Depends()):
     user = get_user_by_username_db(form.username)
 
-    if not user.username and verify_password(form.password, user.password):
+    if not user or not verify_password(form.password, user.password):
         return "Неправильный пароль"
     
     access_token = await create_access_token(data={"sub": user.username})
@@ -50,8 +50,30 @@ async def get_user(user: UserSchema = Depends(get_current_user)):
 
 
 
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse(request, name="login.html")
+
+@app.post("/login", response_class=HTMLResponse)
+async def login_form(username: str = Form(...),
+                    password: str = Form(...)):
+    user = get_user_by_username_db(username)
+    if not user or not verify_password(password, user.password):
+        return "Неправильный пароль"
+    
+    token = await create_access_token(data={"sub": username})
 
 
+    response = RedirectResponse(url="/user", status_code=303)
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {token}",
+        httponly=True,
+        samesite='lax',
+        max_age=30
+    )
+    print(response)
+    return response
 
 
 
@@ -183,8 +205,9 @@ async def main(request: Request):
     )
 
 
-@app.get("/user/{uid}", response_class=HTMLResponse)
-async def user_post_page(request: Request, uid: int):
+@app.get("/user", response_class=HTMLResponse)
+async def user_post_page(request: Request, user = Depends(get_current_user)):
+    uid = user.id
     user_posts = get_exact_user_post_db(uid)
     user = get_user_db(uid)
     post_cards = _build_post_cards(user_posts if isinstance(user_posts, list) else [])

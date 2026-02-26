@@ -6,7 +6,7 @@ from database.userservice import get_user_by_username_db
 from datetime import timedelta, datetime
 
 
-oauth_schema = OAuth2PasswordBearer(tokenUrl="/token")
+oauth_schema = OAuth2PasswordBearer(tokenUrl="/token", auto_error=False)
 
 
 def _credentials_exception() -> HTTPException:
@@ -18,8 +18,10 @@ def _credentials_exception() -> HTTPException:
 
 
 async def get_current_user(request: Request, token: str | None = Depends(oauth_schema)):
+    print(token)
     if not token:
         token = request.cookies.get("access_token")
+        print(request.cookies)
         if token and token.startswith("Bearer "):
             token = token.split(" ", 1)[1]
     
